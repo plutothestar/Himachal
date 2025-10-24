@@ -21,7 +21,7 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
     try {
         verifyAdminToken(req);
-    } catch (error:any) {
+    } catch (error: any) {
         return res.status(401).json({ status: 'error', message: error.message });
     }
     if (req.method !== 'POST') {
@@ -63,9 +63,16 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     if (file && file.filepath) {
         // Upload image to Cloudinary in the dynamically chosen folder
         try {
-            const uploadResult = await uploadImage(file, folderPath);
+            const withTimeout = (promise, ms = 10000) =>
+                Promise.race([
+                    promise,
+                    new Promise((_, reject) => setTimeout(() => reject(new Error('Timed out')), ms))
+                ]);
+
+            const uploadResult = await withTimeout(uploadImage(file, folderPath), 10000);
+
             banner_image_url = uploadResult.secure_url; // URL of the uploaded image in Cloudinary
-        } catch (error:any) {
+        } catch (error: any) {
             return res.status(500).json({
                 status: 'error',
                 message: 'Failed to upload image',
