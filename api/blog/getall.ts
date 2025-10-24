@@ -13,10 +13,15 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     }
 
     if (req.method === 'GET') {
-        await connectToDatabase('HimaCms');
+
 
         try {
-            const blogs = await Content.find();
+            await connectToDatabase('HimaCms');
+
+            const blogs = await Content.find()
+                .sort({ publication_date: -1 })
+                .limit(50) // paginate
+                .lean();
 
             if (blogs.length === 0) {
                 return res.status(404).json({
