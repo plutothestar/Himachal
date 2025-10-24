@@ -5,7 +5,8 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
 const JWT_SECRET = process.env.JWT_SECRET!;
 
 export function handleCors(req: VercelRequest, res: VercelResponse): boolean {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Origin', 'https://www.himanjalidimri.com');
+  // res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
 
