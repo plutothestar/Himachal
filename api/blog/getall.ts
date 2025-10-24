@@ -16,8 +16,10 @@ export default async (req: VercelRequest, res: VercelResponse) => {
 
 
         try {
-            await connectToDatabase('HimaCms');
-
+            let connected = await connectToDatabase('HimaCms');
+            if (connected) {
+                throw new Error(connected);
+            }
             const blogs = await Content.find()
                 .sort({ publication_date: -1 })
                 .limit(50) // paginate
