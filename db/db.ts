@@ -1,21 +1,39 @@
 import mongoose from 'mongoose';
 
-const connectToDatabase = async (dbName: string) => {
-  if (mongoose.connections[0].readyState) {
-    return; // already connected
+const uri = process.env.MONGO_URI as string;
+if (!uri) {
+  throw new Error("❌ MONGO_URI environment variable not defined");
+}
+
+// Global cache to persist the connection between hot reloads and invocations
+let cached = (global as any).mongoose;
+
+if (!cached) {
+  cached = (global as any).mongoose = { conn: null, promise: null };
+}
+
+export default async function connectToDatabase(dbName: string) {
+  // If already connected, reuse the connection
+  if (cached.conn) {
+    // console.log(`♻️ Using existing MongoDB connection to ${dbName}`);
+    return cached.conn;
   }
 
- const uri = process.env.MONGO_URI as string; 
-
-  try {
-    await mongoose.connect(uri, {
-      dbName: dbName, 
-    });
-    console.log(`Connected to the ${dbName} database`);
-  } catch (error) {
-    console.error(`Error connecting to the ${dbName} database:`, error);
-    throw new Error(`Failed to connect to ${dbName} database`);
+  if (!cached.promise) {
+    // Create a new connection promise
+    cached.promise = mongoose
+      .connect(uri, { dbName })
+      .then((mongooseInstance) => {
+        console.log(`✅ Connected to ${dbName} database`);
+        return mongooseInstance;
+      })
+      .catch((err) => {
+        console.error(`❌ MongoDB connection error:`, err);
+        cached.promise = null; // Reset cache if it fails
+        throw err;
+      });
   }
-};
 
-export default connectToDatabase;
+  cached.conn = await cached.promise;
+  return cached.conn;
+}
