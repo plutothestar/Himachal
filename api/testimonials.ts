@@ -50,30 +50,28 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 // Get all testimonial images
 async function getAllTestimonialImages(req: VercelRequest, res: VercelResponse) {
   try {
-    const result = await cloudinary.api.resources({
-      type: 'upload',
-      prefix: 'testimonials/', // The folder for testimonials
-    });
-    
-    const images = result.resources.map((image: any) => ({
-      url: image.secure_url,
-      public_id: image.public_id,
-    }));
+    const result = await cloudinary.api.resources_by_asset_folder(
+      'testimonials',
+      {
+        resource_type: 'image',
+        max_results: 100,
+      }
+    );
 
     return res.status(200).json({
       status: 'success',
-      message: 'Testimonial images fetched successfully',
-      data: images,
+      count: result.resources.length,
+      data: result.resources.map((img: any) => ({
+        url: img.secure_url,
+        public_id: img.public_id,
+      })),
     });
-  } catch (error:any) {
-    console.error('Error fetching images from Cloudinary:', error);
-    return res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch testimonial images',
-      error: error.message,
-    });
+  } catch (error: any) {
+    console.error(error);
+    return res.status(500).json({ error: error.message });
   }
 }
+
 
 // Add a new testimonial image
 async function addTestimonialImage(req: VercelRequest, res: VercelResponse) {
